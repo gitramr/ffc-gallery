@@ -10,7 +10,7 @@ h1 {
   padding: 1rem;
   font-size: 2.5rem;
   font-weight: bold;
-  color: #ff0066; /* bright pink for humor */
+  color: #b8860b; /* dark yellow (goldenrod) */
   text-shadow: 2px 2px 0 #000, 4px 4px 0 #00ffcc; /* comic-style shadow */
   font-family: "Comic Sans MS", "Chalkboard SE", cursive; /* funny font */
   animation: wobble 2s infinite;
