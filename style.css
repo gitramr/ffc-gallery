@@ -10,8 +10,9 @@ h1 {
   padding: 1rem;
   font-size: 2.5rem;
   font-weight: bold;
-  color: #b8860b; /* dark yellow (goldenrod) */
-  text-shadow: 2px 2px 4px #333; /* softer dark shadow */
+  color: #ffd700; /* brighter golden yellow */
+  -webkit-text-stroke: 2px black; /* black outline stroke */
+  text-shadow: 2px 2px 4px #222; /* subtle dark shadow for depth */
   font-family: "Comic Sans MS", "Chalkboard SE", cursive; /* funny font */
   animation: wobble 2s infinite;
   transform-origin: center;
