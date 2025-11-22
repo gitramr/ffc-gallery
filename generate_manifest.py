@@ -13,7 +13,6 @@ def natural_sort_key(s):
             for text in re.split(r'(\d+)', s)]
 
 def get_existing_numbers(ext):
-    """Return a sorted list of used numbers for a given extension."""
     files = os.listdir(IMAGE_DIR)
     numbers = []
     for f in files:
@@ -27,18 +26,15 @@ def get_existing_numbers(ext):
     return sorted(numbers)
 
 def get_next_available_number(ext):
-    """Find the lowest missing number, else next highest."""
     numbers = get_existing_numbers(ext)
     if not numbers:
         return 1
-    # find first gap
     for i in range(1, max(numbers) + 1):
         if i not in numbers:
             return i
     return max(numbers) + 1
 
 def rename_untracked_images():
-    """Rename any non‑conforming files to the next available slot."""
     files = os.listdir(IMAGE_DIR)
     renamed = []
     for f in files:
@@ -47,7 +43,6 @@ def rename_untracked_images():
         if ext not in VALID_EXTENSIONS:
             continue
         if not name.startswith("image"):
-            # Needs renaming
             next_num = get_next_available_number(ext)
             new_name = f"image{next_num:05d}{ext}"
             old_path = Path(IMAGE_DIR) / f
@@ -63,7 +58,8 @@ def rename_untracked_images():
 def get_image_list():
     files = os.listdir(IMAGE_DIR)
     images = [f for f in files if os.path.splitext(f)[1].lower() in VALID_EXTENSIONS]
-    return sorted(images, key=natural_sort_key)
+    # Sort naturally, then reverse → newest first
+    return sorted(images, key=natural_sort_key, reverse=True)
 
 def write_manifest(images):
     with open(MANIFEST_FILE, "w", encoding="utf-8") as f:
@@ -71,7 +67,7 @@ def write_manifest(images):
         for img in images:
             f.write(f'  "{img}",\n')
         f.write("];\n")
-    print(f"✅ {MANIFEST_FILE} updated with {len(images)} images.")
+    print(f"✅ {MANIFEST_FILE} updated with {len(images)} images (newest first).")
 
 def git_commit_and_push():
     try:
