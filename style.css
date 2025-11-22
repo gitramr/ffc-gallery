@@ -14,20 +14,26 @@ h1 {
 
 #gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr; /* One image per row */
+  gap: 20px;
   padding: 10px;
 }
 
 #gallery img {
   width: 100%;
   height: auto;
-  border-radius: 8px;
-  background-color: #eee; /* placeholder background */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background-color: #eee;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease;
 }
 
 #gallery img:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
+}
+
+#sentinel {
+  height: 1px;
+  background: transparent;
+  margin-bottom: 100px;
 }
