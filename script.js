@@ -3,7 +3,7 @@ let cursor = 0;
 const BATCH_SIZE = 10;
 
 async function loadManifest() {
-  const response = await fetch('../manifest.json');
+  const response = await fetch('manifest.json');
   manifest = await response.json();
   loadNextBatch();
 }
