@@ -1,5 +1,4 @@
 const manifest = [
-  "image00001.jpg",
   "image00002.jpg",
   "image00003.jpg",
   "image00004.jpg",
