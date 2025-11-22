@@ -11,7 +11,7 @@ h1 {
   font-size: 2.5rem;
   font-weight: bold;
   color: #b8860b; /* dark yellow (goldenrod) */
-  text-shadow: 2px 2px 0 #000, 4px 4px 0 #00ffcc; /* comic-style shadow */
+  text-shadow: 2px 2px 4px #333; /* softer dark shadow */
   font-family: "Comic Sans MS", "Chalkboard SE", cursive; /* funny font */
   animation: wobble 2s infinite;
   transform-origin: center;
