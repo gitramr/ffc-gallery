@@ -8,8 +8,22 @@ body {
 h1 {
   text-align: center;
   padding: 1rem;
-  font-size: 1.8rem;
-  color: #333;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #ff0066; /* bright pink for humor */
+  text-shadow: 2px 2px 0 #000, 4px 4px 0 #00ffcc; /* comic-style shadow */
+  font-family: "Comic Sans MS", "Chalkboard SE", cursive; /* funny font */
+  animation: wobble 2s infinite;
+  transform-origin: center;
+}
+
+/* Funny wobble animation */
+@keyframes wobble {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(3deg); }
+  50%  { transform: rotate(-3deg); }
+  75%  { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
 }
 
 #gallery {
