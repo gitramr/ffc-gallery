@@ -8,7 +8,8 @@ function loadNextBatch() {
 
   nextBatch.forEach(img => {
     const imageElement = document.createElement('img');
-    imageElement.src = `images/${img}`;
+    const isFullPath = img.startsWith('images/') || img.startsWith('./images/');
+    imageElement.src = isFullPath ? img : `images/${img}`;
     imageElement.loading = "lazy";
     imageElement.alt = img;
     imageElement.onerror = () => {
@@ -31,7 +32,7 @@ observer.observe(sentinel);
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Document ready. Starting gallery.");
-  if (manifest.length === 0) {
+  if (!Array.isArray(manifest) || manifest.length === 0) {
     console.warn("Manifest is empty. No images to load.");
     return;
   }
