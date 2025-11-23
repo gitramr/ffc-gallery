@@ -2,8 +2,8 @@ name: Update Malayalam Trolls Gallery
 
 on:
   schedule:
-    - cron: "*/15 * * * *"  # every 15 minutes
-  workflow_dispatch:
+   # - cron: "*/15 * * * *"  # every 15 minutes
+  #workflow_dispatch:
 
 jobs:
   update-gallery:
