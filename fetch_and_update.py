@@ -86,7 +86,7 @@ def fetch_and_update():
 
     manifest_content = "const manifest = [\n"
     for img in images:
-        manifest_content += f'  "{IMAGE_DIR}/{img}",\n'
+        manifest_content += f'  "{img}",\n'   # ✅ only filename
     manifest_content += "];\n"
 
     try:
