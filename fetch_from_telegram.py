@@ -2,10 +2,9 @@ import os
 import requests
 from github import Auth, Github
 
-# Load secrets from environment
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
-GH_PAT = os.getenv("GH_PAT")
+GH_PAT = os.getenv("GH_PAT")   # use your PAT here
 REPO_NAME = "gitkailas/infinite-gallery"
 IMAGE_DIR = "images"
 
