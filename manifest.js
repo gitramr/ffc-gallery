@@ -1,3 +1,15 @@
 const manifest = [
-  "image00001.jpg",
+  "images/image00013.jpg",
+  "images/image00012.jpg",
+  "images/image00011.jpg",
+  "images/image00010.jpg",
+  "images/image00009.jpg",
+  "images/image00008.jpg",
+  "images/image00007.jpg",
+  "images/image00006.jpg",
+  "images/image00005.jpg",
+  "images/image00004.jpg",
+  "images/image00003.jpg",
+  "images/image00002.jpg",
+  "images/image00001.jpg",
 ];
