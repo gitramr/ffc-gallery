@@ -1,9 +1,7 @@
 name: Update Malayalam Trolls Gallery
 
 on:
-  schedule:
-   # - cron: "*/15 * * * *"  # every 15 minutes
-  #workflow_dispatch:
+  workflow_dispatch:   # manual trigger only for now
 
 jobs:
   update-gallery:
@@ -21,14 +19,9 @@ jobs:
       - name: Install dependencies
         run: pip install requests PyGithub
 
-      - name: Fetch images from Telegram
-        run: python fetch_from_telegram.py
+      - name: Fetch images and update manifest
+        run: python fetch_and_update.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-          GH_PAT: ${{ secrets.GH_PAT }}
-
-      - name: Update manifest
-        run: python generate_manifest.py
-        env:
           GH_PAT: ${{ secrets.GH_PAT }}
