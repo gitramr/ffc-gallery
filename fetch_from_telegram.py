@@ -1,16 +1,15 @@
 import os
 import requests
-from github import Github
+from github import Auth, Github
 
 # Load secrets from environment
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GH_PAT = os.getenv("GH_PAT")
 REPO_NAME = "gitkailas/infinite-gallery"
 IMAGE_DIR = "images"
 
 def get_file_url(file_id):
-    # Get file path from Telegram
     file_info = requests.get(
         f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getFile?file_id={file_id}"
     ).json()
@@ -22,17 +21,17 @@ def fetch_images():
         f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates"
     ).json()["result"]
 
-    g = Github(GITHUB_TOKEN)
+    auth = Auth.Token(GH_PAT)
+    g = Github(auth=auth)
     repo = g.get_repo(REPO_NAME)
 
-    # Get existing image filenames
     existing_files = [f.name for f in repo.get_contents(IMAGE_DIR)]
     next_index = len(existing_files) + 1
 
     for update in updates:
         msg = update.get("message", {})
         if "photo" in msg:
-            photo = msg["photo"][-1]  # highest resolution
+            photo = msg["photo"][-1]
             file_id = photo["file_id"]
             file_url = get_file_url(file_id)
             image_bytes = requests.get(file_url).content
