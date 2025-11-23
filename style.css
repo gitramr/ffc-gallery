@@ -30,7 +30,7 @@ h1 {
 #gallery {
   display: grid;
   grid-template-columns: 1fr; /* One image per row */
-  row-gap: 5rem; /* responsive vertical spacing between images */
+  row-gap: 10rem; /* responsive vertical spacing between images */
   column-gap: 0;
   padding: 10px;
 }
