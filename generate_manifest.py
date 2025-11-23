@@ -1,92 +1,45 @@
 import os
 import re
-import subprocess
-from pathlib import Path
+from github import Auth, Github
 
 IMAGE_DIR = "images"
 MANIFEST_FILE = "manifest.js"
-SCRIPT_FILE = "generate_manifest.py"
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+
+GH_PAT = os.getenv("GH_PAT")
+REPO_NAME = "gitkailas/infinite-gallery"
 
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(r'(\d+)', s)]
 
-def get_existing_numbers(ext):
-    files = os.listdir(IMAGE_DIR)
-    numbers = []
-    for f in files:
-        name, e = os.path.splitext(f)
-        if e.lower() == ext and name.startswith("image"):
-            try:
-                num = int(name.replace("image", ""))
-                numbers.append(num)
-            except ValueError:
-                pass
-    return sorted(numbers)
-
-def get_next_available_number(ext):
-    numbers = get_existing_numbers(ext)
-    if not numbers:
-        return 1
-    for i in range(1, max(numbers) + 1):
-        if i not in numbers:
-            return i
-    return max(numbers) + 1
-
-def rename_untracked_images():
-    files = os.listdir(IMAGE_DIR)
-    renamed = []
-    for f in files:
-        name, ext = os.path.splitext(f)
-        ext = ext.lower()
-        if ext not in VALID_EXTENSIONS:
-            continue
-        if not name.startswith("image"):
-            next_num = get_next_available_number(ext)
-            new_name = f"image{next_num:05d}{ext}"
-            old_path = Path(IMAGE_DIR) / f
-            new_path = Path(IMAGE_DIR) / new_name
-            os.rename(old_path, new_path)
-            renamed.append((f, new_name))
-    if renamed:
-        print("🔄 Renamed files:")
-        for old, new in renamed:
-            print(f"  {old} → {new}")
-    return renamed
-
-def get_image_list():
-    files = os.listdir(IMAGE_DIR)
-    images = [f for f in files if os.path.splitext(f)[1].lower() in VALID_EXTENSIONS]
-    # Sort naturally, then reverse → newest first
+def get_image_list(repo):
+    files = repo.get_contents(IMAGE_DIR)
+    images = [f.name for f in files if os.path.splitext(f.name)[1].lower() in VALID_EXTENSIONS]
     return sorted(images, key=natural_sort_key, reverse=True)
 
-def write_manifest(images):
-    with open(MANIFEST_FILE, "w", encoding="utf-8") as f:
-        f.write("const manifest = [\n")
-        for img in images:
-            f.write(f'  "{img}",\n')
-        f.write("];\n")
-    print(f"✅ {MANIFEST_FILE} updated with {len(images)} images (newest first).")
+def build_manifest(images):
+    content = "const manifest = [\n"
+    for img in images:
+        content += f'  "{IMAGE_DIR}/{img}",\n'
+    content += "];\n"
+    return content
 
-def git_commit_and_push():
+def update_manifest():
+    auth = Auth.Token(GH_PAT)
+    g = Github(auth=auth)
+    repo = g.get_repo(REPO_NAME)
+
+    images = get_image_list(repo)
+    manifest_content = build_manifest(images)
+
     try:
-        subprocess.run(["git", "add", MANIFEST_FILE, SCRIPT_FILE, IMAGE_DIR], check=True)
-        result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
-        if result.stdout.strip() == "":
-            print("ℹ️ No changes to commit.")
-            return
-        subprocess.run(["git", "commit", "-m", "Auto-update manifest and assets"], check=True)
-        subprocess.run(["git", "push"], check=True)
-        print("🚀 Changes committed and pushed to GitHub.")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Git error: {e}")
+        contents = repo.get_contents(MANIFEST_FILE)
+        repo.update_file(contents.path, "Update manifest", manifest_content, contents.sha)
+        print(f"✅ {MANIFEST_FILE} updated with {len(images)} images.")
+    except Exception:
+        repo.create_file(MANIFEST_FILE, "Create manifest", manifest_content)
+        print(f"✅ {MANIFEST_FILE} created with {len(images)} images.")
 
 if __name__ == "__main__":
-    try:
-        rename_untracked_images()
-        images = get_image_list()
-        write_manifest(images)
-        git_commit_and_push()
-    except Exception as e:
-        print(f"❌ Error: {e}")
+    update_manifest()

@@ -30,3 +30,5 @@ jobs:
 
       - name: Update manifest
         run: python generate_manifest.py
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
