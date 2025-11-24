@@ -1,6 +1,12 @@
 let cursor = 0;
 const BATCH_SIZE = 10;
 
+function clearGallery() {
+  const gallery = document.getElementById('gallery');
+  gallery.innerHTML = ""; // remove all existing images
+  cursor = 0;             // reset cursor
+}
+
 function loadNextBatch() {
   const gallery = document.getElementById('gallery');
   const nextBatch = manifest.slice(cursor, cursor + BATCH_SIZE);
@@ -36,5 +42,16 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("Manifest is empty. No images to load.");
     return;
   }
+  clearGallery();   // ensure gallery starts fresh
   loadNextBatch();
 });
+
+// Optional: reload gallery if manifest changes dynamically
+function reloadGallery() {
+  clearGallery();
+  if (manifest.length === 0) {
+    console.warn("Manifest is empty. No images to load.");
+    return;
+  }
+  loadNextBatch();
+}

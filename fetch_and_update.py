@@ -16,7 +16,6 @@ REPO_NAME = "gitkailas/infinite-gallery"
 IMAGE_DIR = "images"
 MANIFEST_FILE = "manifest.js"
 STATE_DIR = ".state"
-OFFSET_FILE = f"{STATE_DIR}/last_update_id.txt"
 HASHES_FILE = f"{STATE_DIR}/image_hashes.json"
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
@@ -39,16 +38,15 @@ def ensure_dir_exists(repo, path):
     try:
         repo.get_contents(path)
     except UnknownObjectException:
-        # Create placeholder so GitHub tracks the directory
         repo.create_file(f"{path}/.gitkeep", f"Create {path} folder", "")
         print(f"ℹ️ Created {path} folder")
 
-def read_repo_text(repo, path):
+def read_repo_json(repo, path):
     try:
         contents = repo.get_contents(path)
-        return contents.decoded_content.decode("utf-8"), contents.sha
-    except UnknownObjectException:
-        return None, None
+        return json.loads(contents.decoded_content.decode("utf-8")), contents.sha
+    except Exception:
+        return {}, None
 
 def write_repo_text(repo, path, text, sha=None, message="Update file"):
     if sha:
@@ -56,31 +54,10 @@ def write_repo_text(repo, path, text, sha=None, message="Update file"):
     else:
         repo.create_file(path, message, text)
 
-def read_repo_json(repo, path):
-    text, sha = read_repo_text(repo, path)
-    if text is None:
-        return {}, None
-    try:
-        return json.loads(text), sha
-    except json.JSONDecodeError:
-        return {}, sha
-
 def get_images_list(repo):
     items = repo.get_contents(IMAGE_DIR)
     names = [i.name for i in items if os.path.splitext(i.name)[1].lower() in VALID_EXTENSIONS]
     return sorted(names, key=natural_sort_key, reverse=True)
-
-def get_next_index(repo):
-    items = repo.get_contents(IMAGE_DIR)
-    nums = []
-    for i in items:
-        name, ext = os.path.splitext(i.name)
-        if ext.lower() in VALID_EXTENSIONS and name.startswith("image"):
-            try:
-                nums.append(int(name.replace("image", "")))
-            except ValueError:
-                pass
-    return (max(nums) + 1) if nums else 1
 
 def fetch_and_update():
     # Auth to GitHub
@@ -88,91 +65,76 @@ def fetch_and_update():
     g = Github(auth=auth)
     repo = g.get_repo(REPO_NAME)
 
-    # Ensure directories exist
     ensure_dir_exists(repo, IMAGE_DIR)
     ensure_dir_exists(repo, STATE_DIR)
 
-    # Offset persistence in repo
-    last_offset_text, last_offset_sha = read_repo_text(repo, OFFSET_FILE)
-    last_offset = int(last_offset_text) if last_offset_text else None
-
-    # Hash registry persistence
+    # Load hash registry
     hashes, hashes_sha = read_repo_json(repo, HASHES_FILE)
 
-    # Telegram updates
-    params = {}
-    if last_offset is not None:
-        params["offset"] = last_offset + 1
-
+    # 1. Fetch all messages from Telegram channel
     updates = requests.get(
         f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates",
-        params=params,
         timeout=30,
     ).json().get("result", [])
 
-    if not updates:
-        print("ℹ️ No new updates.")
-    else:
-        existing_names = [f.name for f in repo.get_contents(IMAGE_DIR)]
-        next_index = get_next_index(repo)
+    # Collect current Telegram images
+    telegram_hashes = {}
+    for update in updates:
+        msg = update.get("message", {})
+        if "photo" in msg:
+            photo = msg["photo"][-1]
+            file_id = photo["file_id"]
+            file_url = get_file_url(file_id)
+            image_bytes = requests.get(file_url, timeout=60).content
+            content_hash = sha256_bytes(image_bytes)
+            telegram_hashes[content_hash] = image_bytes
 
-        for update in updates:
-            msg = update.get("message", {})
-            if "photo" in msg:
-                # Largest size
-                photo = msg["photo"][-1]
-                file_id = photo["file_id"]
-                file_url = get_file_url(file_id)
-                image_bytes = requests.get(file_url, timeout=60).content
-                content_hash = sha256_bytes(image_bytes)
+    # 2. Delete repo images not in Telegram
+    repo_files = repo.get_contents(IMAGE_DIR)
+    for f in repo_files:
+        if f.name.endswith(tuple(VALID_EXTENSIONS)):
+            # If hash not in telegram_hashes, delete
+            file_bytes = f.decoded_content
+            file_hash = sha256_bytes(file_bytes)
+            if file_hash not in telegram_hashes:
+                repo.delete_file(f.path, f"Remove {f.name}", f.sha)
+                print(f"🗑️ Deleted {f.name} (not in Telegram)")
 
-                # Skip if we've seen this content before
-                if content_hash in hashes:
-                    print(f"↩️ Duplicate content detected, skipping {hashes[content_hash]}")
-                else:
-                    filename = f"image{next_index:05d}.jpg"
-                    path = f"{IMAGE_DIR}/{filename}"
+    # 3. Add new Telegram images not in repo
+    existing_files = [f.name for f in repo.get_contents(IMAGE_DIR)]
+    next_index = len(existing_files) + 1
+    for h, img_bytes in telegram_hashes.items():
+        if h not in hashes:
+            filename = f"image{next_index:05d}.jpg"
+            path = f"{IMAGE_DIR}/{filename}"
+            repo.create_file(path, f"Add {filename}", img_bytes)
+            hashes[h] = filename
+            print(f"✅ Uploaded {filename}")
+            next_index += 1
 
-                    # Avoid accidental name collision
-                    if filename in existing_names:
-                        next_index = get_next_index(repo)
-                        filename = f"image{next_index:05d}.jpg"
-                        path = f"{IMAGE_DIR}/{filename}"
+    # 4. Persist hash registry
+    write_repo_text(
+        repo, HASHES_FILE, json.dumps(hashes, indent=2),
+        sha=hashes_sha,
+        message="Update image hash registry"
+    )
 
-                    try:
-                        repo.create_file(path, f"Add {filename}", image_bytes)
-                        hashes[content_hash] = filename
-                        print(f"✅ Uploaded {filename}")
-                        next_index += 1
-                        # refresh existing names cache lightly
-                        existing_names.append(filename)
-                    except Exception as e:
-                        print(f"⚠️ Failed to upload {filename}: {e}")
-
-            # Advance offset to the latest processed update_id
-            last_offset = update["update_id"]
-
-        # Persist new offset and hashes
-        write_repo_text(
-            repo, OFFSET_FILE, str(last_offset),
-            sha=last_offset_sha,
-            message="Advance Telegram offset"
-        )
-        write_repo_text(
-            repo, HASHES_FILE, json.dumps(hashes, indent=2),
-            sha=hashes_sha,
-            message="Update image hash registry"
-        )
-
-    # Build manifest with filenames only
+    # 5. Build manifest
     images = get_images_list(repo)
     manifest_content = "const manifest = [\n"
     for img in images:
         manifest_content += f'  "{img}",\n'
     manifest_content += "];\n"
 
-    # Write manifest
-    manifest_text, manifest_sha = read_repo_text(repo, MANIFEST_FILE)
+    manifest_text = None
+    manifest_sha = None
+    try:
+        contents = repo.get_contents(MANIFEST_FILE)
+        manifest_text = contents.decoded_content.decode("utf-8")
+        manifest_sha = contents.sha
+    except Exception:
+        pass
+
     write_repo_text(
         repo, MANIFEST_FILE, manifest_content,
         sha=manifest_sha,
