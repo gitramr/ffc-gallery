@@ -1,1 +1,3 @@
-const manifest = [];
+const manifest = [
+  "image00001.jpg",
+];
