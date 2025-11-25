@@ -13,8 +13,33 @@ body {
 }
 
 .logo {
-  height: 60px; /* adjust size as needed */
+  height: auto;              /* allow natural scaling */
+  max-height: 60px;          /* default size on larger screens */
+  width: auto;
   margin-right: 15px;
+}
+
+/* On smaller screens, shrink the logo */
+@media (max-width: 768px) {
+  .logo {
+    max-height: 45px;
+    margin-right: 10px;
+  }
+
+  h1 {
+    font-size: 2rem;         /* slightly smaller heading */
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    max-height: 35px;
+    margin-right: 8px;
+  }
+
+  h1 {
+    font-size: 1.6rem;       /* even smaller heading for mobile */
+  }
 }
 
 h1 {
