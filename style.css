@@ -5,26 +5,26 @@ body {
   background-color: #f9f9f9;
 }
 
-h1 {
-  text-align: center;
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center heading + logo together */
   padding: 1rem;
+}
+
+.logo {
+  height: 60px; /* adjust size as needed */
+  margin-right: 15px;
+}
+
+h1 {
   font-size: 2.5rem;
   font-weight: bold;
   color: #ffd700; /* brighter golden yellow */
   -webkit-text-stroke: 2px black; /* black outline stroke */
   text-shadow: 2px 2px 4px #222; /* subtle dark shadow for depth */
-  font-family: "Comic Sans MS", "Chalkboard SE", cursive; /* funny font */
-  animation: wobble 2s infinite;
-  transform-origin: center;
-}
-
-/* Funny wobble animation */
-@keyframes wobble {
-  0%   { transform: rotate(0deg); }
-  25%  { transform: rotate(3deg); }
-  50%  { transform: rotate(-3deg); }
-  75%  { transform: rotate(2deg); }
-  100% { transform: rotate(0deg); }
+  font-family: "Comic Sans MS", "Chalkboard SE", cursive;
+  /* animation removed */
 }
 
 #gallery {
