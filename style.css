@@ -8,18 +8,19 @@ body {
 .site-header {
   display: flex;
   align-items: center;
-  justify-content: center; /* center heading + logo together */
+  justify-content: center;
   padding: 1rem;
+  flex-wrap: wrap; /* allow wrapping when space is tight */
 }
 
 .logo {
-  height: auto;              /* allow natural scaling */
-  max-height: 60px;          /* default size on larger screens */
+  height: auto;
+  max-height: 60px;
   width: auto;
   margin-right: 15px;
 }
 
-/* On smaller screens, shrink the logo */
+/* Tablet adjustments */
 @media (max-width: 768px) {
   .logo {
     max-height: 45px;
@@ -27,18 +28,24 @@ body {
   }
 
   h1 {
-    font-size: 2rem;         /* slightly smaller heading */
+    font-size: 2rem;
   }
 }
 
+/* Mobile adjustments */
 @media (max-width: 480px) {
+  .site-header {
+    flex-direction: column;   /* stack vertically */
+  }
+
   .logo {
-    max-height: 35px;
-    margin-right: 8px;
+    max-height: 40px;
+    margin: 0 0 10px 0;       /* space below logo */
   }
 
   h1 {
-    font-size: 1.6rem;       /* even smaller heading for mobile */
+    font-size: 1.6rem;
+    text-align: center;       /* keep centered under logo */
   }
 }
 
